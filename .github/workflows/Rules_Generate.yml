@@ -1,0 +1,67 @@
+name: Rule_Generate
+
+on:
+  schedule:
+    - cron: "55 15 * * *"
+
+  pull_request:
+    branches:
+      - GITHUB
+
+  repository_dispatch:
+    types:
+      - bot_trigger
+
+  workflow_dispatch:
+
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Current Repository
+        uses: actions/checkout@v7
+        with:
+          ref: GITHUB
+
+
+      - name: Print current directory
+        run: |
+          cd ./Rules/
+          pwd
+
+
+      - name: Pull Rules
+        run: |
+          python .github/workflows/Get_File.py
+
+
+      - name: Merge Rules
+        run: |
+          python .github/workflows/Merge_File.py
+
+
+      - name: Commit files
+        run: |
+          git config --local user.email "Ezrea7@gmail.com"
+          git config --local user.name "Ezrea7"
+
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No Repository Update Detected."
+            exit 0
+          fi
+
+          git commit -m "Update Rules"
+
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GIT_TOKEN }}
+          branch: GITHUB
+          force: false

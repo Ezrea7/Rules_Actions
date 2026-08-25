@@ -1,0 +1,52 @@
+import os
+import io
+import shutil
+import time
+import requests
+
+print (os.getcwd())
+os.chdir("./Rules")
+
+RULE_URL = "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/"
+PROXY_RULES = {
+    "GlobalMedia": RULE_URL + "GlobalMedia/GlobalMedia.list",
+    "GlobalMedia_Domain": RULE_URL + "GlobalMedia/GlobalMedia_Domain.list",
+    "Global": RULE_URL + "Global/Global.list",
+    "Global_Domain": RULE_URL + "Global/Global_Domain.list",
+    "Proxy": RULE_URL + "Proxy/Proxy.list",
+    "Proxy_Domain": RULE_URL + "Proxy/Proxy_Domain.list"
+}
+DIRECT_RULES = {
+    "ChinaMax": RULE_URL + "ChinaMax/ChinaMax.list",
+    "ChinaMax_Domain": RULE_URL + "ChinaMax/ChinaMax_Domain.list"
+}
+
+HEADER = {'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Mobile/24A5390f Safari/604.1'}
+
+def load_file(rules_dict, file_dir):
+    """
+    下载规则文件
+    """
+    if not os.path.exists(file_dir):
+        os.mkdir(file_dir)
+        
+    for key in rules_dict:
+        response = requests.get(rules_dict[key], headers=HEADER)
+        if response.status_code == 200:
+            with open(f"./{file_dir}/{key}.list", "wb") as f:
+                with response, io.BytesIO(response.content) as stream:
+                    shutil.copyfileobj(stream, f)
+            time.sleep(1)
+
+def remove():
+    """
+    移除所有规则文件
+    """
+    shutil.rmtree("Proxy-Rule")
+    shutil.rmtree("Direct-Rule")
+    print("移除所有文件夹")
+
+if __name__ == '__main__':
+    remove()
+    load_file(PROXY_RULES, "Proxy-Rule")
+    load_file(DIRECT_RULES, "Direct-Rule")
